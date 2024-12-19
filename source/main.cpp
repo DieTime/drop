@@ -62,19 +62,34 @@ int main(int argc, char **argv)
     const char *user_home_directory = std::getenv("HOME");
 
     if (!user_home_directory) {
-        print::oops("Couldn't drop " + entry.path(), "User home directory not defined");
+        print::oops("Couldn't drop " + entry.path(),
+                    "The $HOME environment variable is not defined");
         return 1;
     }
 
     fs::entry trash = fs::entry(user_home_directory).join(".local").join("share").join("Trash");
+    fs::entry trash_files_directory = trash.join("files");
+    fs::entry trash_info_directory = trash.join("info");
 
-    if (!trash.exists()) {
-        print::oops("Couldn't drop " + entry.path(), "Trash doesn't exists: " + trash.path());
+    if (!trash.exists() && !trash.create_as_directory()) {
+        print::oops("Couldn't drop " + entry.path(), "Couldn't create directory " + trash.path());
         return 1;
     }
 
-    fs::entry trash_entry = trash.join("files").join(entry.name());
-    fs::entry trash_info_entry = trash.join("info").join(entry.name() + ".trashinfo");
+    if (!trash_files_directory.exists() && !trash_files_directory.create_as_directory()) {
+        print::oops("Couldn't drop " + entry.path(),
+                    "Couldn't create directory " + trash_files_directory.path());
+        return 1;
+    }
+
+    if (!trash_info_directory.exists() && !trash_info_directory.create_as_directory()) {
+        print::oops("Couldn't drop " + entry.path(),
+                    "Couldn't create directory " + trash_info_directory.path());
+        return 1;
+    }
+
+    fs::entry trash_entry = trash_files_directory.join(entry.name());
+    fs::entry trash_info_entry = trash_info_directory.join(entry.name() + ".trashinfo");
 
     if (trash_entry.exists()) {
         for (int i = 1; i < std::numeric_limits<int>::max(); i++) {
