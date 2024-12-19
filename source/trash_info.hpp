@@ -1,19 +1,19 @@
 #ifndef DROP_TRASH_INFO_HPP
 #define DROP_TRASH_INFO_HPP
 
-#include "fs.hpp"
+#include <string>
 
 namespace trash_info {
 
 class writer
 {
 public:
-    writer(fs::entry entry);
+    writer(std::string path_to_be_removed);
 
-    bool write() const;
+    bool write_to(const std::string &dest) const;
 
 private:
-    fs::entry m_entry;
+    std::string m_path_to_be_removed;
 };
 
 } /* namespace trash_info */

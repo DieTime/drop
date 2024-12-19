@@ -95,25 +95,25 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (!entry.copy(trash_entry)) {
+    trash_info::writer trash_info_writer(entry.absolute_path());
+
+    if (!trash_info_writer.write_to(trash_info_entry.path())) {
         print::oops("Couldn't drop " + entry.path(),
-                    "Couldn't copy " + entry.path() + " to " + trash_entry.path());
+                    "Couldn't create trash info " + trash_info_entry.path());
         return 1;
     }
 
-    trash_info::writer trash_info_writer(trash_info_entry);
-
-    if (!trash_info_writer.write()) {
+    if (!entry.copy(trash_entry)) {
         print::oops("Couldn't drop " + entry.path(),
-                    "Couldn't create trash info " + trash_info_entry.path());
-        trash_entry.remove();
+                    "Couldn't copy " + entry.path() + " to " + trash_entry.path());
+        trash_info_entry.remove();
         return 1;
     }
 
     if (!entry.remove()) {
         print::oops("Couldn't drop " + entry.path(), "Couldn't remove " + entry.path());
-        trash_entry.remove();
         trash_info_entry.remove();
+        trash_entry.remove();
         return 1;
     }
 
