@@ -21,7 +21,7 @@ do
     esac
 done
 
-SOURCES=$(find ./sources -regex '.+\.[hc]pp')
+SOURCES=$(find source -regex '.+\.[hc]pp')
 
 if [[ $FIX_MODE -eq 0 ]]; then
     if ! clang-format-15 --dry-run --Werror $SOURCES; then
