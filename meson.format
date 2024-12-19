@@ -1,0 +1,14 @@
+max_line_length: 100
+indent_by: '    '
+space_array: false
+kwargs_force_multiline: true
+wide_colon: false
+no_single_comma_function: true
+end_of_line: 'lf'
+indent_before_comments: '  '
+simplify_string_literals: false
+insert_final_newline: true
+tab_width: 4
+sort_files: true
+group_arg_value: true
+use_editor_config: false

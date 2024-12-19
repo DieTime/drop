@@ -2,10 +2,7 @@ project(
     'drop',
     'cpp',
     version: '0.1.0',
-    default_options: [
-        'cpp_std=c++20',
-        'warning_level=3',
-    ],
+    default_options: ['cpp_std=c++20', 'warning_level=3'],
 )
 
 configuration = configuration_data(
@@ -14,7 +11,7 @@ configuration = configuration_data(
         'DROP_COMMIT_HASH': '(unknown)',
         'DROP_TAG': '(unknown)',
         'DROP_REMOTE': '(unknown)',
-    },
+    }
 )
 
 commit_command = run_command(
@@ -53,12 +50,11 @@ version_header = configure_file(
     configuration: configuration,
 )
 
-sources = [
-    'arguments.cpp',
-    'fs.cpp',
-    'print.cpp',
-    'trash_info.cpp',
-    'main.cpp',
-]
+sources = ['arguments.cpp', 'fs.cpp', 'print.cpp', 'trash_info.cpp', 'main.cpp']
 
-executable('drop', sources, version_header, install: true)
+executable(
+    'drop',
+    sources,
+    version_header,
+    install: true,
+)
