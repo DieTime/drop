@@ -12,13 +12,13 @@ entry::entry(std::string path)
 
 bool entry::copy(const entry &dest) const
 {
-    std::error_code error_code;
+    using std::filesystem::copy_options;
 
-    if (is_symlink()) {
-        std::filesystem::copy_symlink(m_path, dest.path(), error_code);
-    } else {
-        std::filesystem::copy(m_path, dest.path(), error_code);
-    }
+    std::error_code error_code;
+    std::filesystem::copy(m_path,
+                          dest.path(),
+                          copy_options::recursive | copy_options::copy_symlinks,
+                          error_code);
 
     return !error_code;
 }
