@@ -1,138 +1,117 @@
-#include <chrono>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <limits>
-#include <string_view>
-#include <string>
-
+#include "arguments.hpp"
+#include "fs.hpp"
+#include "print.hpp"
+#include "trash_info.hpp"
 #include "version.hpp"
 
-namespace fs = std::filesystem;
-namespace ch = std::chrono;
+#include <limits>
+#include <sstream>
 
-void fs_entry_copy(const fs::path &from, const fs::path &to)
+namespace {
+
+std::string version_message()
 {
-    if (fs::is_symlink(from)) {
-        fs::copy_symlink(from, to);
-    } else {
-        fs::copy(from, to);
-    }
+    std::stringstream version;
+    version << "drop " << DROP_VERSION << std::endl
+            << "  - commit: " << DROP_COMMIT_HASH << std::endl
+            << "  - tag: " << DROP_TAG << std::endl
+            << "  - remote: " << DROP_REMOTE;
+
+    return version.str();
 }
 
-bool fs_entry_exists(const fs::path &path) {
-    return fs::is_symlink(path) || fs::exists(path);
-}
-
-void fs_entry_cleanup(const fs::path &path)
+std::string usage_message()
 {
-    if (fs_entry_exists(path)) {
-        try {
-            fs::remove_all(path);
-        }
-        catch (const std::exception &err) {
-            std::cout << "😥 couldn't clean up " << path << std::endl
-                      << "   ↳ " << err.what() << std::endl;
-        }
-    }
+    std::stringstream usage;
+    usage << "Usage:" << std::endl
+          << "   drop PATH            Remove PATH to the trash" << std::endl
+          << "   drop -h|--help       Print help message" << std::endl
+          << "   drop -v|--version    Print version";
+
+    return usage.str();
 }
 
-void create_trash_info(const fs::path &entry_path, const fs::path &info_path)
-{
-    std::time_t now = ch::system_clock::to_time_t(ch::system_clock::now());
-    std::tm *tm = std::localtime(&now);
-
-    if (!tm) {
-        throw std::runtime_error("could not get the current time");
-    }
-
-    std::ofstream out(info_path, std::ios::trunc);
-
-    if (!out) {
-        throw std::runtime_error("could not open " + info_path.string() + " for writting");
-    }
-
-    out << "[Trash Info]" << std::endl;
-    out << "Path=" << fs::absolute(entry_path) << std::endl;
-    out << "DeletionDate=" << std::put_time(tm, "%Y-%m-%dT%H:%M:%S") << std::endl;
-}
+} /* namespace */
 
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
-        std::cout << "😥 path is not specified" << std::endl;
+    arguments::container args(argc, argv);
+
+    if (args.count() != 2) {
+        print::error("Invalid arguments count");
         return 1;
     }
 
-    if (std::string_view(argv[1]) == "--version") {
-        std::cout << "drop " << DROP_VERSION << std::endl
-                  << " - commit: " << DROP_COMMIT_HASH << std::endl
-                  << " - tag: " << DROP_TAG << std::endl
-                  << " - remote: " << DROP_REMOTE << std::endl;
+    if (args.at(1) == "-v" || args.at(1) == "--version") {
+        print::message(version_message());
         return 0;
     }
 
-    if (std::string_view(argv[1]) == "--help") {
-        std::cout << "Remove anything to the trash." << std::endl << std::endl
-                  << "Usage:" << std::endl
-                  << "   drop <PATH>" << std::endl;
+    if (args.at(1) == "-h" || args.at(1) == "--help") {
+        print::message(usage_message());
         return 0;
     }
 
-    fs::path entry_path = argv[1];
-    std::string entry_name = entry_path.filename().string();
+    fs::entry entry(std::string(args.at(1)));
+
+    if (!entry.exists()) {
+        print::error(entry.path() + " doesn't exists");
+        return 1;
+    }
 
     if (!std::getenv("HOME")) {
-        std::cout << "😥 couldn't drop " << entry_path << std::endl
-                  << "   ↳ user home directory not defined" << std::endl;
+        print::oops("Couldn't drop " + entry.path(), "User home directory not defined");
         return 1;
     }
 
-    fs::path trash_directory = fs::path(std::getenv("HOME")) / ".local" / "share" / "Trash";
+    fs::entry trash = fs::entry(std::getenv("HOME")).join(".local").join("share").join("Trash");
 
-    try {
-        fs::create_directories(trash_directory);
-    }
-    catch (const std::exception &err) {
-        std::cout << "😥 couldn't drop " << entry_path << std::endl
-                << "   ↳ " << err.what() << std::endl;
+    if (!trash.exists()) {
+        print::oops("Couldn't drop " + entry.path(), "Trash doesn't exists: " + trash.path());
+        return 1;
     }
 
-    fs::path trash_entry_path = trash_directory / "files" / entry_name;
-    fs::path trash_entry_info_path = trash_directory / "info" / (entry_name + ".trashinfo");
+    fs::entry trash_entry = trash.join("files").join(entry.name());
+    fs::entry trash_info_entry = trash.join("info").join(entry.name() + ".trashinfo");
 
-    if (fs_entry_exists(trash_entry_path)) {
+    if (trash_entry.exists()) {
         for (int i = 1; i < std::numeric_limits<int>::max(); i++) {
-            std::string entry_name_with_num = entry_name + " (" + std::to_string(i) + ")";
+            std::string entry_name = entry.name() + " (" + std::to_string(i) + ")";
 
-            trash_entry_path = trash_directory / "files" / entry_name_with_num;
-            trash_entry_info_path = trash_directory / "info" / (entry_name_with_num + ".trashinfo");
+            trash_entry = trash.join("files").join(entry_name);
+            trash_info_entry = trash.join("info").join(entry_name + ".trashinfo");
 
-            if (!fs_entry_exists(trash_entry_path)) {
+            if (!trash_entry.exists()) {
                 break;
             }
         }
     }
 
-    if (fs_entry_exists(trash_entry_path)) {
-        std::cout << "😥 couldn't drop " << entry_path << std::endl
-                  << "   ↳ path " << trash_entry_path << " already exists in the trash"
-                  << std::endl;
+    if (trash_entry.exists()) {
+        print::oops("Couldn't drop " + entry.path(),
+                    "Couldn't create a unique name for the trash directory");
         return 1;
     }
 
-    try {
-        fs_entry_copy(entry_path, trash_entry_path);
-        create_trash_info(entry_path, trash_entry_info_path);
-        fs::remove_all(entry_path);
+    if (!entry.copy(trash_entry)) {
+        print::oops("Couldn't drop " + entry.path(),
+                    "Couldn't copy " + entry.path() + " to " + trash_entry.path());
+        return 1;
     }
-    catch (const std::exception &err) {
-        std::cout << "😥 couldn't drop " << entry_path << std::endl
-                  << "   ↳ " << err.what() << std::endl;
 
-        fs_entry_cleanup(trash_entry_path);
-        fs_entry_cleanup(trash_entry_info_path);
+    trash_info::writter trash_info_writter(trash_info_entry);
 
+    if (!trash_info_writter.write()) {
+        print::oops("Couldn't drop " + entry.path(),
+                    "Couldn't create trash info " + trash_info_entry.path());
+        trash_entry.remove();
+        return 1;
+    }
+
+    if (!entry.remove()) {
+        print::oops("Couldn't drop " + entry.path(), "Couldn't remove " + entry.path());
+        trash_entry.remove();
+        trash_info_entry.remove();
         return 1;
     }
 
