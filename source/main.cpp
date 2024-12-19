@@ -1,4 +1,3 @@
-#include "arguments.hpp"
 #include "fs.hpp"
 #include "print.hpp"
 #include "trash_info.hpp"
@@ -6,6 +5,7 @@
 
 #include <limits>
 #include <sstream>
+#include <string>
 
 namespace {
 
@@ -35,24 +35,24 @@ std::string usage_message()
 
 int main(int argc, char **argv)
 {
-    arguments::container args(argc, argv);
-
-    if (args.count() != 2) {
+    if (argc != 2) {
         print::error("Invalid arguments count");
         return 1;
     }
 
-    if (args.at(1) == "-v" || args.at(1) == "--version") {
+    std::string argument = argv[1];
+
+    if (argument == "-v" || argument == "--version") {
         print::message(version_message());
         return 0;
     }
 
-    if (args.at(1) == "-h" || args.at(1) == "--help") {
+    if (argument == "-h" || argument == "--help") {
         print::message(usage_message());
         return 0;
     }
 
-    fs::entry entry(std::string(args.at(1)));
+    fs::entry entry(argument);
 
     if (!entry.exists()) {
         print::error(entry.path() + " doesn't exists");

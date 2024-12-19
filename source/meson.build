@@ -43,7 +43,7 @@ version_header = configure_file(
     configuration: configuration,
 )
 
-sources = ['arguments.cpp', 'fs.cpp', 'print.cpp', 'trash_info.cpp', 'main.cpp']
+sources = ['fs.cpp', 'print.cpp', 'trash_info.cpp', 'main.cpp']
 
 executable(
     'drop',
