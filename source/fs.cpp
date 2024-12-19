@@ -26,7 +26,7 @@ bool entry::copy(const entry &dest) const
 bool entry::remove() const
 {
     std::error_code error_code;
-    bool is_success = std::filesystem::remove(m_path, error_code);
+    bool is_success = std::filesystem::remove_all(m_path, error_code);
 
     return !error_code && is_success;
 }
