@@ -15,7 +15,7 @@ public:
     size_t count() const;
 
 private:
-    std::span<char*> m_arguments;
+    std::span<char *> m_arguments;
 };
 
 } /* namespace arguments */

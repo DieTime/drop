@@ -59,12 +59,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (!std::getenv("HOME")) {
+    const char *user_home_directory = std::getenv("HOME");
+
+    if (!user_home_directory) {
         print::oops("Couldn't drop " + entry.path(), "User home directory not defined");
         return 1;
     }
 
-    fs::entry trash = fs::entry(std::getenv("HOME")).join(".local").join("share").join("Trash");
+    fs::entry trash = fs::entry(user_home_directory).join(".local").join("share").join("Trash");
 
     if (!trash.exists()) {
         print::oops("Couldn't drop " + entry.path(), "Trash doesn't exists: " + trash.path());
@@ -99,9 +101,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    trash_info::writter trash_info_writter(trash_info_entry);
+    trash_info::writer trash_info_writer(trash_info_entry);
 
-    if (!trash_info_writter.write()) {
+    if (!trash_info_writer.write()) {
         print::oops("Couldn't drop " + entry.path(),
                     "Couldn't create trash info " + trash_info_entry.path());
         trash_entry.remove();
