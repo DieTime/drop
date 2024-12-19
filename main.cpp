@@ -3,6 +3,10 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <string_view>
+#include <string>
+
+#include "version.hpp"
 
 namespace fs = std::filesystem;
 namespace ch = std::chrono;
@@ -58,6 +62,20 @@ int main(int argc, char **argv)
     if (argc < 2) {
         std::cout << "😥 path is not specified" << std::endl;
         return 1;
+    }
+
+    if (std::string_view(argv[1]) == "--version") {
+        std::cout << "drop " << DROP_VERSION << std::endl
+                  << " - commit: " << DROP_COMMIT_HASH << std::endl
+                  << " - tag: " << DROP_TAG << std::endl;
+        return 0;
+    }
+
+    if (std::string_view(argv[1]) == "--help") {
+        std::cout << "Remove anything to the trash." << std::endl << std::endl
+                  << "Usage:" << std::endl
+                  << "   drop <PATH>" << std::endl;
+        return 0;
     }
 
     fs::path entry_path = argv[1];
