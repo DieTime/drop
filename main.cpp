@@ -67,7 +67,8 @@ int main(int argc, char **argv)
     if (std::string_view(argv[1]) == "--version") {
         std::cout << "drop " << DROP_VERSION << std::endl
                   << " - commit: " << DROP_COMMIT_HASH << std::endl
-                  << " - tag: " << DROP_TAG << std::endl;
+                  << " - tag: " << DROP_TAG << std::endl
+                  << " - remote: " << DROP_REMOTE << std::endl;
         return 0;
     }
 

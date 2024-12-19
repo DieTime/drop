@@ -10,6 +10,7 @@ project(
 
 commit = '(unknown)'
 tag = '(unknown)'
+remote = '(unknown)'
 
 commit_command = run_command(
     ['git', 'rev-parse', 'HEAD'],
@@ -31,6 +32,16 @@ if tag_command.returncode() == 0
     commit = tag_command.stdout().strip()
 endif
 
+remote_command = run_command(
+    ['git', 'config', '--get', 'remote.origin.url'],
+    capture: true,
+    check: false,
+)
+
+if remote_command.returncode() == 0
+    remote = tag_command.stdout().strip()
+endif
+
 version_header = configure_file(
     input: 'version.hpp.in',
     output: 'version.hpp',
@@ -38,6 +49,7 @@ version_header = configure_file(
         'DROP_VERSION': meson.project_version(),
         'DROP_COMMIT_HASH': commit,
         'DROP_TAG': tag,
+        'DROP_REMOTE': remote,
     },
 )
 
