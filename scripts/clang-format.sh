@@ -21,7 +21,7 @@ do
     esac
 done
 
-SOURCES=$(find . -regex '.+\.[hc]pp' -o -name "version.hpp.in")
+SOURCES=$(find ./sources -regex '.+\.[hc]pp')
 
 if [[ $FIX_MODE -eq 0 ]]; then
     if ! clang-format-15 --dry-run --Werror $SOURCES; then
