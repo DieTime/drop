@@ -48,7 +48,7 @@ bool writer::write_to(const std::string &dest) const
      * Create and open destination file using open() with O_EXCL:
      * https://specifications.freedesktop.org/trash-spec/1.0/#contents-of-a-trash-directory
      */
-    int fd = open(dest.c_str(), O_CREAT | O_WRONLY | O_EXCL);
+    int fd = open(dest.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 
     if (fd == -1) {
         return false;
