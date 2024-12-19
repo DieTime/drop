@@ -12,10 +12,10 @@ namespace {
 std::string version_message()
 {
     std::stringstream version;
-    version << "drop " << DROP_VERSION << std::endl
-            << "  - commit: " << DROP_COMMIT_HASH << std::endl
-            << "  - tag: " << DROP_TAG << std::endl
-            << "  - remote: " << DROP_REMOTE;
+    version << "Drop " << DROP_VERSION << std::endl
+            << "  - Commit: " << DROP_COMMIT_HASH << std::endl
+            << "  - Tag: " << DROP_TAG << std::endl
+            << "  - Remote: " << DROP_REMOTE;
 
     return version.str();
 }
