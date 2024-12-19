@@ -11,6 +11,10 @@ set -e
 rm -rf .code-checker
 mkdir .code-checker
 
+rm -rf build
+meson setup build
+meson compile -C build
+
 CodeChecker analyze ./build/compile_commands.json \
     --analyzers clangsa clang-tidy cppcheck \
     --analyzer-config 'clang-tidy:take-config-from-directory=true' \
