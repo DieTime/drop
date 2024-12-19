@@ -14,6 +14,7 @@ public:
     bool remove() const;
     bool exists() const;
     bool is_symlink() const;
+    bool create_as_directory() const;
 
     const std::string &path() const;
     const std::string &absolute_path() const;

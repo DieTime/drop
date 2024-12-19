@@ -47,6 +47,14 @@ bool entry::is_symlink() const
     return !error_code && is_symlink;
 }
 
+bool entry::create_as_directory() const
+{
+    std::error_code error_code;
+    bool is_success = std::filesystem::create_directories(m_path, error_code);
+
+    return !error_code && is_success;
+}
+
 const std::string &entry::path() const
 {
     return m_path;
