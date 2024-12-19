@@ -8,6 +8,7 @@ namespace fs {
 class entry
 {
 public:
+    entry() = default;
     entry(std::string path);
 
     bool copy(const entry &dest) const;

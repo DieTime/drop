@@ -1,6 +1,7 @@
 #include "fs.hpp"
 #include "print.hpp"
 #include "trash_info.hpp"
+#include "uuid.hpp"
 #include "version.hpp"
 
 #include <limits>
@@ -91,24 +92,21 @@ int main(int argc, char **argv)
     fs::entry trash_entry = trash_files_directory.join(entry.name());
     fs::entry trash_info_entry = trash_info_directory.join(entry.name() + ".trashinfo");
 
-    if (trash_entry.exists()) {
-        for (int i = 1; i < std::numeric_limits<int>::max(); i++) {
-            std::string entry_name = entry.name() + " (" + std::to_string(i) + ")";
+    size_t attempts = 0;
 
-            trash_entry = trash.join("files").join(entry_name);
-            trash_info_entry = trash.join("info").join(entry_name + ".trashinfo");
-
-            if (!trash_entry.exists()) {
-                break;
-            }
+    do {
+        if (attempts >= 10) {
+            print::oops("Couldn't drop " + entry.path(),
+                        "Couldn't resolve name collisions in the trash directory");
+            return 1;
         }
-    }
 
-    if (trash_entry.exists()) {
-        print::oops("Couldn't drop " + entry.path(),
-                    "Couldn't create a unique name for the trash directory");
-        return 1;
-    }
+        std::string unique_entry_name = entry.name() + " (drop-uuid=" + uuid::v4() + ")";
+        trash_entry = trash_files_directory.join(unique_entry_name);
+        trash_info_entry = trash_info_directory.join(unique_entry_name + ".trashinfo");
+
+        attempts += 1;
+    } while (trash_entry.exists() || trash_info_entry.exists());
 
     trash_info::writer trash_info_writer(entry.absolute_path());
 
