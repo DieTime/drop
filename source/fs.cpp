@@ -3,10 +3,23 @@
 
 #include <filesystem>
 
+namespace {
+
+std::string remove_trailing_slash(const std::string &path)
+{
+    if (path.ends_with('/')) {
+        return std::filesystem::path(path).parent_path();
+    }
+
+    return path;
+}
+
+} /* namespace */
+
 namespace fs {
 
-entry::entry(std::string path)
-    : m_path(std::move(path))
+entry::entry(const std::string &path)
+    : m_path(remove_trailing_slash(path))
     , m_name(std::filesystem::path(m_path).filename())
     , m_absolute_path(std::filesystem::absolute(m_path))
 {}

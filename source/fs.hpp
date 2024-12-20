@@ -10,7 +10,7 @@ class entry
 {
 public:
     entry() = default;
-    entry(std::string path);
+    entry(const std::string &path);
 
     bool copy(const entry &dest) const;
     bool remove() const;
