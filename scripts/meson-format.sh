@@ -21,13 +21,13 @@ do
     esac
 done
 
-MESON_FILES=$(find . -name "meson.build" -o -name "meson.options")
+MESON_FILES=$(find . -name "meson.build")
 
 if [[ $FIX_MODE -eq 0 ]]; then
-    if ! meson format -q $MESON_FILES; then
+    if ! meson format -q -r; then
         echo "Error: meson build scripts are not formatted! Run '$0 -f'"
         exit 1
     fi
 else
-    meson format -i $MESON_FILES
+    meson format -i -r
 fi

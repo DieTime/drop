@@ -1,0 +1,42 @@
+name: Check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  check:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Update repositories
+      run: sudo apt-get update -qq
+
+    - name: Setup python3
+      run: sudo apt-get install -qq -y python3 python3-pip
+
+    - name: Setup meson
+      run: python3 -m pip install meson
+
+    - name: Setup typos
+      run: |
+        curl -o typos.tar.gz -L https://github.com/crate-ci/typos/releases/download/v1.28.2/typos-v1.28.2-x86_64-unknown-linux-musl.tar.gz
+        tar -xvzf typos.tar.gz -C $HOME/.local/bin ./typos
+
+    - name: Setup clang-format-15
+      run: sudo apt-get install -qq -y clang-format-15
+
+    - name: Check clang-format
+      run: scripts/clang-format.sh
+
+    - name: Check meson-format
+      run: scripts/meson-format.sh
+
+    - name: Check typos
+      run: scripts/typos.sh

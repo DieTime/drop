@@ -4,7 +4,7 @@ configuration = configuration_data(
         'DROP_COMMIT_HASH': '(unknown)',
         'DROP_TAG': '(unknown)',
         'DROP_REMOTE': '(unknown)',
-    },
+    }
 )
 
 commit_command = run_command(
@@ -45,4 +45,9 @@ version_header = configure_file(
 
 sources = ['fs.cpp', 'print.cpp', 'trash_info.cpp', 'uuid.cpp', 'main.cpp']
 
-executable('drop', sources, version_header, install: true)
+executable(
+    'drop',
+    sources,
+    version_header,
+    install: true,
+)
