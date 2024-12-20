@@ -5,9 +5,13 @@
 
 namespace print {
 
+enum class verbose_mode { enabled, disabled };
+void set_verbose_mode(verbose_mode mode);
+
 void error(const std::string &message);
 void oops(const std::string &message, const std::string &description);
 void message(const std::string &message);
+void verbose(const std::string &message, const std::string &description);
 
 } /* namespace print */
 

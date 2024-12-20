@@ -2,6 +2,7 @@
 #define DROP_FS_HPP
 
 #include <string>
+#include <string_view>
 
 namespace fs {
 
@@ -14,7 +15,6 @@ public:
     bool copy(const entry &dest) const;
     bool remove() const;
     bool exists() const;
-    bool is_symlink() const;
     bool create_as_directory() const;
 
     const std::string &path() const;

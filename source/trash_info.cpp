@@ -1,6 +1,9 @@
 #include "trash_info.hpp"
+#include "print.hpp"
 
+#include <cerrno>
 #include <chrono>
+#include <cstring>
 #include <fcntl.h>
 #include <iomanip>
 #include <sstream>
@@ -18,6 +21,9 @@ bool write_n_bytes(int fd, const char *data, size_t data_size)
         ssize_t bytes_written = write(fd, data + cursor, bytes_to_write);
 
         if (bytes_written == -1) {
+            print::verbose("Couldn't write " + std::to_string(bytes_to_write) + " bytes to "
+                               + std::to_string(fd) + " file descriptor",
+                           std::strerror(errno));
             return false;
         }
 
@@ -41,6 +47,7 @@ bool writer::write_to(const std::string &dest) const
     std::tm *time = std::localtime(&now);
 
     if (!time) {
+        print::verbose("Couldn't parse unix timestamp", std::strerror(errno));
         return false;
     }
 
@@ -51,6 +58,7 @@ bool writer::write_to(const std::string &dest) const
     int fd = open(dest.c_str(), O_CREAT | O_WRONLY | O_EXCL, 0644);
 
     if (fd == -1) {
+        print::verbose("Couldn't open " + dest + " for writing", std::strerror(errno));
         return false;
     }
 
@@ -60,10 +68,17 @@ bool writer::write_to(const std::string &dest) const
     content_stream << "DeletionDate=" << std::put_time(time, "%Y-%m-%dT%H:%M:%S") << std::endl;
 
     std::string content = content_stream.str();
-    bool ok = write_n_bytes(fd, content.data(), content.size());
 
+    bool ok = write_n_bytes(fd, content.data(), content.size());
     close(fd);
-    return ok;
+
+    if (!ok) {
+        print::verbose("Couldn't write " + std::to_string(content.size()) + " bytes to " + dest,
+                       std::strerror(errno));
+        return false;
+    }
+
+    return true;
 }
 
 } /* namespace trash_info */

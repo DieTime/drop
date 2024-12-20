@@ -5,58 +5,68 @@
 #include "version.hpp"
 
 #include <limits>
-#include <sstream>
+#include <span>
 #include <string>
+#include <string_view>
 
 namespace {
 
-std::string version_message()
+std::string about()
 {
-    std::stringstream version;
-    version << "Drop " << DROP_VERSION << std::endl
-            << "  - Commit: " << DROP_COMMIT_HASH << std::endl
-            << "  - Tag: " << DROP_TAG << std::endl
-            << "  - Remote: " << DROP_REMOTE;
-
-    return version.str();
+    return "Drop " DROP_VERSION "\n"
+           "  - Commit: " DROP_COMMIT_HASH "\n"
+           "  - Tag: " DROP_TAG "\n"
+           "  - Remote: " DROP_REMOTE;
 }
 
-std::string usage_message()
+std::string usage()
 {
-    std::stringstream usage;
-    usage << "Usage:" << std::endl
-          << "   drop PATH            Remove PATH to the trash" << std::endl
-          << "   drop -h|--help       Print help message" << std::endl
-          << "   drop -v|--version    Print version";
-
-    return usage.str();
+    return "Drop anything in the trash.\n"
+           "\n"
+           "Usage:\n"
+           "   drop [OPTIONS] PATH\n"
+           "\n"
+           "Options:\n"
+           "   -h,--help       Print help message\n"
+           "   -a,--about      Print about message\n"
+           "   -v,--verbose    Print verbose messages";
 }
 
 } /* namespace */
 
 int main(int argc, char **argv)
 {
-    if (argc != 2) {
-        print::error("Invalid arguments count");
+    std::span<char *> args(argv + 1, argc - 1);
+
+    while (!args.empty()) {
+        if (args[0] == std::string_view("-h") || args[0] == std::string_view("--help")) {
+            print::message(usage());
+            return 0;
+        }
+
+        if (args[0] == std::string_view("-a") || args[0] == std::string_view("--about")) {
+            print::message(about());
+            return 0;
+        }
+
+        if (args[0] == std::string_view("-v") || args[0] == std::string_view("--verbose")) {
+            print::set_verbose_mode(print::verbose_mode::enabled);
+            args = args.subspan(1);
+            continue;
+        }
+
+        break;
+    }
+
+    if (args.empty()) {
+        print::message(usage());
         return 1;
     }
 
-    std::string argument = argv[1];
-
-    if (argument == "-v" || argument == "--version") {
-        print::message(version_message());
-        return 0;
-    }
-
-    if (argument == "-h" || argument == "--help") {
-        print::message(usage_message());
-        return 0;
-    }
-
-    fs::entry entry(argument);
+    fs::entry entry(args[0]);
 
     if (!entry.exists()) {
-        print::error(entry.path() + " doesn't exists");
+        print::error("The " + entry.path() + " doesn't exists");
         return 1;
     }
 
@@ -105,6 +115,7 @@ int main(int argc, char **argv)
         trash_entry = trash_files_directory.join(unique_entry_name);
         trash_info_entry = trash_info_directory.join(unique_entry_name + ".trashinfo");
 
+        print::verbose("Attempting to select a file name for the trash", unique_entry_name);
         attempts += 1;
     } while (trash_entry.exists() || trash_info_entry.exists());
 
@@ -116,19 +127,32 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    print::verbose("Trash info successfully created", trash_info_entry.path());
+
     if (!entry.copy(trash_entry)) {
         print::oops("Couldn't drop " + entry.path(),
                     "Couldn't copy " + entry.path() + " to " + trash_entry.path());
+
+        print::verbose("Removing created trash info", trash_info_entry.path());
         trash_info_entry.remove();
+
         return 1;
     }
+
+    print::verbose("File successfully copied to the trash", trash_entry.path());
 
     if (!entry.remove()) {
         print::oops("Couldn't drop " + entry.path(), "Couldn't remove " + entry.path());
+
+        print::verbose("Removing created trash info", trash_info_entry.path());
         trash_info_entry.remove();
+
+        print::verbose("Removing copied trash entry", trash_entry.path());
         trash_entry.remove();
+
         return 1;
     }
 
+    print::verbose("File successfully removed", entry.path());
     return 0;
 }
