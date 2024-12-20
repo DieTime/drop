@@ -65,6 +65,11 @@ int main(int argc, char **argv)
 
     fs::entry entry(args[0]);
 
+    if (entry.path() == "/") {
+        print::oops("Nice try!", "Did you really want to remove all system files?");
+        return 1;
+    }
+
     if (!entry.exists()) {
         print::error("The " + entry.path() + " doesn't exists");
         return 1;
@@ -81,6 +86,16 @@ int main(int argc, char **argv)
     fs::entry trash = fs::entry(user_home_directory).join(".local").join("share").join("Trash");
     fs::entry trash_files_directory = trash.join("files");
     fs::entry trash_info_directory = trash.join("info");
+
+    if (entry.absolute_path() == trash.path()) {
+        print::oops("Nice try!", "Did you really want to remove the trash to trash?");
+        return 1;
+    }
+
+    if (entry.absolute_path().starts_with(trash.path() + "/")) {
+        print::oops("Nice try!", "Why do you want to remove files that are already in the trash?");
+        return 1;
+    }
 
     if (!trash.exists() && !trash.create_as_directory()) {
         print::oops("Couldn't drop " + entry.path(), "Couldn't create directory " + trash.path());
