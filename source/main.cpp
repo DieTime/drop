@@ -8,6 +8,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace {
 
@@ -32,47 +33,18 @@ std::string usage()
            "   -v,--verbose    Print verbose messages";
 }
 
-} /* namespace */
-
-int main(int argc, char **argv)
+bool drop_path(const std::string &path)
 {
-    std::span<char *> args(argv + 1, argc - 1);
-
-    while (!args.empty()) {
-        if (args[0] == std::string_view("-h") || args[0] == std::string_view("--help")) {
-            print::message(usage());
-            return 0;
-        }
-
-        if (args[0] == std::string_view("-a") || args[0] == std::string_view("--about")) {
-            print::message(about());
-            return 0;
-        }
-
-        if (args[0] == std::string_view("-v") || args[0] == std::string_view("--verbose")) {
-            print::set_verbose_mode(print::verbose_mode::enabled);
-            args = args.subspan(1);
-            continue;
-        }
-
-        break;
-    }
-
-    if (args.empty()) {
-        print::message(usage());
-        return 1;
-    }
-
-    fs::entry entry(args[0]);
+    fs::entry entry(path);
 
     if (entry.path() == "/") {
         print::oops("Nice try!", "Did you really want to remove all system files?");
-        return 1;
+        return false;
     }
 
     if (!entry.exists()) {
         print::error("The " + entry.path() + " doesn't exists");
-        return 1;
+        return false;
     }
 
     const char *user_home_directory = std::getenv("HOME");
@@ -80,7 +52,7 @@ int main(int argc, char **argv)
     if (!user_home_directory) {
         print::oops("Couldn't drop " + entry.path(),
                     "The $HOME environment variable is not defined");
-        return 1;
+        return false;
     }
 
     fs::entry trash = fs::entry(user_home_directory).join(".local").join("share").join("Trash");
@@ -89,29 +61,29 @@ int main(int argc, char **argv)
 
     if (entry.absolute_path() == trash.path()) {
         print::oops("Nice try!", "Did you really want to remove the trash to trash?");
-        return 1;
+        return false;
     }
 
     if (entry.absolute_path().starts_with(trash.path() + "/")) {
         print::oops("Nice try!", "Why do you want to remove files that are already in the trash?");
-        return 1;
+        return false;
     }
 
     if (!trash.exists() && !trash.create_as_directory()) {
         print::oops("Couldn't drop " + entry.path(), "Couldn't create directory " + trash.path());
-        return 1;
+        return false;
     }
 
     if (!trash_files_directory.exists() && !trash_files_directory.create_as_directory()) {
         print::oops("Couldn't drop " + entry.path(),
                     "Couldn't create directory " + trash_files_directory.path());
-        return 1;
+        return false;
     }
 
     if (!trash_info_directory.exists() && !trash_info_directory.create_as_directory()) {
         print::oops("Couldn't drop " + entry.path(),
                     "Couldn't create directory " + trash_info_directory.path());
-        return 1;
+        return false;
     }
 
     fs::entry trash_entry = trash_files_directory.join(entry.name());
@@ -123,7 +95,7 @@ int main(int argc, char **argv)
         if (attempts >= 10) {
             print::oops("Couldn't drop " + entry.path(),
                         "Couldn't resolve name collisions in the trash directory");
-            return 1;
+            return false;
         }
 
         std::string unique_entry_name = entry.name() + " (drop-uuid=" + uuid::v4() + ")";
@@ -139,7 +111,7 @@ int main(int argc, char **argv)
     if (!trash_info_writer.write_to(trash_info_entry.path())) {
         print::oops("Couldn't drop " + entry.path(),
                     "Couldn't create trash info " + trash_info_entry.path());
-        return 1;
+        return false;
     }
 
     print::verbose("Trash info successfully created", trash_info_entry.path());
@@ -151,7 +123,7 @@ int main(int argc, char **argv)
         print::verbose("Removing created trash info", trash_info_entry.path());
         trash_info_entry.remove();
 
-        return 1;
+        return false;
     }
 
     print::verbose("File successfully copied to the trash", trash_entry.path());
@@ -165,9 +137,49 @@ int main(int argc, char **argv)
         print::verbose("Removing copied trash entry", trash_entry.path());
         trash_entry.remove();
 
-        return 1;
+        return false;
     }
 
     print::verbose("File successfully removed", entry.path());
-    return 0;
+    return true;
+}
+
+} /* namespace */
+
+int main(int argc, char **argv)
+{
+    std::span<char *> args(argv + 1, argc - 1);
+    std::vector<std::string> paths;
+
+    while (!args.empty()) {
+        if (args[0] == std::string_view("-h") || args[0] == std::string_view("--help")) {
+            print::message(usage());
+            return 0;
+        }
+
+        if (args[0] == std::string_view("-a") || args[0] == std::string_view("--about")) {
+            print::message(about());
+            return 0;
+        }
+
+        if (args[0] == std::string_view("-v") || args[0] == std::string_view("--verbose")) {
+            print::set_verbose_mode(print::verbose_mode::enabled);
+        } else if (fs::entry(args[0]).exists()) {
+            paths.emplace_back(args[0]);
+        } else {
+            print::verbose("Skip dropping a non-existent file", args[0]);
+        }
+
+        args = args.subspan(1);
+    }
+
+    bool success = true;
+
+    for (const auto &path: paths) {
+        if (!drop_path(path)) {
+            success = false;
+        }
+    }
+
+    return success ? 0 : 1;
 }
