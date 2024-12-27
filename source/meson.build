@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Denis Glazkov <glazzk.off@mail.ru>
+# SPDX-License-Identifier: MIT
+
 configuration = configuration_data(
     {
         'DROP_VERSION': meson.project_version(),

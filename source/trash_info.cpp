@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: 2024 Denis Glazkov <glazzk.off@mail.ru>
+ * SPDX-License-Identifier: MIT
+ */
+
 #include "trash_info.hpp"
 #include "print.hpp"
 

@@ -1,3 +1,8 @@
+/**
+ * SPDX-FileCopyrightText: 2024 Denis Glazkov <glazzk.off@mail.ru>
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef DROP_LOG_HPP
 #define DROP_LOG_HPP
 
