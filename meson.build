@@ -4,7 +4,7 @@
 project(
     'drop',
     'cpp',
-    version: '0.3.1',
+    version: '0.3.2',
     default_options: ['cpp_std=c++20', 'warning_level=3'],
 )
 
