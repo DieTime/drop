@@ -30,7 +30,7 @@ std::string usage()
     return "Drop anything in the trash.\n"
            "\n"
            "Usage:\n"
-           "   drop [OPTIONS] PATH\n"
+           "   drop [OPTIONS] PATH [PATH...]\n"
            "\n"
            "Options:\n"
            "   -h,--help       Print help message\n"
