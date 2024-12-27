@@ -178,6 +178,11 @@ int main(int argc, char **argv)
         args = args.subspan(1);
     }
 
+    if (paths.empty()) {
+        print::error("No existing files for dropping");
+        return 1;
+    }
+
     bool success = true;
 
     for (const auto &path: paths) {
