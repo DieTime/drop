@@ -37,16 +37,25 @@ $ meson install -C build
 
 ## Usage
 
-To drop some file or directory in the trash just run the following command:
+To drop some file or directory in the trash just run the following commandю
 
 ```bash
-$ drop <PATH>
+$ drop icon.png
 ```
 
-You can also drop multiple files or directories in the trash:
+You can use the `--verbose` option to enable more detailed messages.
 
 ```bash
-$ drop <PATH> [PATH...]
+$ drop --verbose icon.svg
+
+👀 Verbose! Attempting to select a file name for the trash
+   ↳ icon.svg (drop-uuid=2721ebaf-f835-4a08-b604-e0c624609abc)
+👀 Verbose! Trash info successfully created
+   ↳ /home/glazzkoff/.local/share/Trash/info/icon.svg (drop-uuid=2721ebaf-f835-4a08-b604-e0c624609abc).trashinfo
+👀 Verbose! File successfully copied to the trash
+   ↳ /home/glazzkoff/.local/share/Trash/files/icon.svg (drop-uuid=2721ebaf-f835-4a08-b604-e0c624609abc)
+👀 Verbose! File successfully removed
+   ↳ icon.svg
 ```
 
 ## License
