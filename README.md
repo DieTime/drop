@@ -8,7 +8,7 @@
 
 <p align="center">
    <img
-      src="https://github.com/DieTime/drop/actions/workflows/build.yaml/badge.svg?color=9676F2&label=Linux%20build"
+      src="https://img.shields.io/github/actions/workflow/status/DieTime/drop/.github%2Fworkflows%2Fbuild.yaml?label=Linux%20build&color=9676F2"
       alt="Linux build"
    />
    <img
